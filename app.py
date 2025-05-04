@@ -25,6 +25,11 @@ def get_link(name):
     result = cursor.fetchone()
     return result[0] if result else None
 
+def delete_link(name):
+    """Xóa link theo tên đã lưu"""
+    cursor.execute("DELETE FROM links WHERE name=?", (name,))
+    conn.commit()
+
 @app.route("/webhook", methods=['GET'])
 def verify():
     """Xác minh webhook với Facebook"""
@@ -44,8 +49,8 @@ def webhook():
 
                 if text.startswith('/save '):  # Lưu link
                     try:
-                        save_name, save_url = text[6:].split(' ', 1)  # Đổi tên biến để tránh xung đột
-                        save_link_to_db(save_name, save_url)  # Gọi hàm bằng tên mới
+                        save_name, save_url = text[6:].split(' ', 1)
+                        save_link_to_db(save_name, save_url)
                         send_message(sender, f"Đã lưu {save_name} với link: {save_url}")
                     except ValueError:
                         send_message(sender, "Sai cú pháp! Dùng: /save <tên> <link>")
@@ -57,7 +62,15 @@ def webhook():
                         send_message(sender, f"Link của {search_name} là: {link}")
                     else:
                         send_message(sender, f"Không tìm thấy link cho {search_name}")
-                    
+
+                elif text.startswith('/del '):  # Xóa link
+                    delete_name = text[5:]
+                    if get_link(delete_name):  # Kiểm tra xem link có tồn tại không
+                        delete_link(delete_name)  # Gọi hàm xóa
+                        send_message(sender, f"Đã xóa link của {delete_name}")
+                    else:
+                        send_message(sender, f"Không tìm thấy link để xóa cho {delete_name}")
+
     return "ok", 200
 
 def send_message(psid, message):
