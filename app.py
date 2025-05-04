@@ -14,11 +14,13 @@ cursor = conn.cursor()
 cursor.execute("CREATE TABLE IF NOT EXISTS links (name TEXT, url TEXT)")
 conn.commit()
 
-def save_link(name, url):
+def save_link_to_db(name, url):
+    """Lưu link vào database"""
     cursor.execute("INSERT INTO links (name, url) VALUES (?, ?)", (name, url))
     conn.commit()
 
 def get_link(name):
+    """Lấy link từ database theo tên đã lưu"""
     cursor.execute("SELECT url FROM links WHERE name=?", (name,))
     result = cursor.fetchone()
     return result[0] if result else None
@@ -42,9 +44,9 @@ def webhook():
 
                 if text.startswith('/save '):  # Lưu link
                     try:
-                        save_name, save_link = text[6:].split(' ', 1)
-                        save_link(save_name, save_link)
-                        send_message(sender, f"Đã lưu {save_name} với link: {save_link}")
+                        save_name, save_url = text[6:].split(' ', 1)  # Đổi tên biến để tránh xung đột
+                        save_link_to_db(save_name, save_url)  # Gọi hàm bằng tên mới
+                        send_message(sender, f"Đã lưu {save_name} với link: {save_url}")
                     except ValueError:
                         send_message(sender, "Sai cú pháp! Dùng: /save <tên> <link>")
 
