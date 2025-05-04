@@ -4,7 +4,7 @@ import requests
 app = Flask(__name__)
 
 VERIFY_TOKEN = "mytoken123"
-PAGE_ACCESS_TOKEN = "YOUR_PAGE_ACCESS_TOKEN"
+PAGE_ACCESS_TOKEN = "EAAffNumwM40BO9fetZCNa7FjvE7OnhY6Yxex2EYJRXiqRNDdbQiuyv2E9AsTjzepZCX21C1oyC0m436ZB5yFNZA9UffZCoqEWOnCQnODcWnr5W5ympocEsZBCqnqlZARdanZBl4Twnyp3dLZBnKCApVC0VS2IR7Bi9hMujnMIKmQMucOae4jikWutAKLJXGHFNAZBYlQZDZD"
 
 @app.route("/webhook", methods=['GET'])
 def verify():
