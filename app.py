@@ -1,6 +1,7 @@
 from flask import Flask, request
 import requests
 import sqlite3
+import os
 
 app = Flask(__name__)
 
@@ -8,16 +9,24 @@ app = Flask(__name__)
 VERIFY_TOKEN = "mytoken123"
 PAGE_ACCESS_TOKEN = "EAAffNumwM40BO9fetZCNa7FjvE7OnhY6Yxex2EYJRXiqRNDdbQiuyv2E9AsTjzepZCX21C1oyC0m436ZB5yFNZA9UffZCoqEWOnCQnODcWnr5W5ympocEsZBCqnqlZARdanZBl4Twnyp3dLZBnKCApVC0VS2IR7Bi9hMujnMIKmQMucOae4jikWutAKLJXGHFNAZBYlQZDZD"
 
-# Kết nối SQLite và tạo bảng nếu chưa có
-conn = sqlite3.connect("links.db", check_same_thread=False)
+# Cấu hình database SQLite
+db_path = os.environ.get('DATABASE_URL', 'links.db')  # Render sẽ tạo DATABASE_URL môi trường khi bạn tạo Persistent Volume
+conn = sqlite3.connect(db_path, check_same_thread=False)
 cursor = conn.cursor()
+
+# Tạo bảng nếu chưa có
 cursor.execute("CREATE TABLE IF NOT EXISTS links (name TEXT, url TEXT)")
 conn.commit()
 
 def save_link_to_db(name, url):
     """Lưu link vào database"""
-    cursor.execute("INSERT INTO links (name, url) VALUES (?, ?)", (name, url))
-    conn.commit()
+    try:
+        cursor.execute("INSERT INTO links (name, url) VALUES (?, ?)", (name, url))
+        conn.commit()
+    except sqlite3.Error as e:
+        print(f"Error saving link: {e}")
+        return False
+    return True
 
 def get_link(name):
     """Lấy link từ database theo tên đã lưu"""
@@ -86,5 +95,3 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
-#EAAffNumwM40BO9fetZCNa7FjvE7OnhY6Yxex2EYJRXiqRNDdbQiuyv2E9AsTjzepZCX21C1oyC0m436ZB5yFNZA9UffZCoqEWOnCQnODcWnr5W5ympocEsZBCqnqlZARdanZBl4Twnyp3dLZBnKCApVC0VS2IR7Bi9hMujnMIKmQMucOae4jikWutAKLJXGHFNAZBYlQZDZD
