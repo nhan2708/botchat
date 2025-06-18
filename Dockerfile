@@ -1,18 +1,13 @@
-# Base image
+# Dockerfile
+
 FROM python:3.11-slim
 
-# Cài g++ để build psycopg2 nếu cần
-RUN apt-get update && apt-get install -y gcc
-
-# Tạo thư mục app
 WORKDIR /app
 
-# Copy code và cài thư viện
-COPY . /app
+COPY requirements.txt .
+
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Mở cổng
-EXPOSE 5000
+COPY . .
 
-# Chạy app bằng gunicorn
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "app:app"]
+CMD ["python", "app.py"]
