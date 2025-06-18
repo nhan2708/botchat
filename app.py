@@ -90,6 +90,10 @@ def send_message(psid, message):
     }
     requests.post(url, json=payload)
 
+@app.route("/")
+def home():
+    return "👋 Bot Facebook Flask đã hoạt động!"
+
 # ----- Khởi động server -----
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
