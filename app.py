@@ -5,43 +5,58 @@ import os
 
 app = Flask(__name__)
 
-# Token xác minh và Page Access Token
+# Gán trực tiếp token ở đây (nếu không dùng biến môi trường)
 VERIFY_TOKEN = "mytoken123"
-PAGE_ACCESS_TOKEN = "EAAffNumwM40BO9fetZCNa7FjvE7OnhY6Yxex2EYJRXiqRNDdbQiuyv2E9AsTjzepZCX21C1oyC0m436ZB5yFNZA9UffZCoqEWOnCQnODcWnr5W5ympocEsZBCqnqlZARdanZBl4Twnyp3dLZBnKCApVC0VS2IR7Bi9hMujnMIKmQMucOae4jikWutAKLJXGHFNAZBYlQZDZD"  # <-- thay đúng token
+PAGE_ACCESS_TOKEN = "EAAffNumwM40BO9fetZCNa7FjvE7OnhY6Yxex2EYJRXiqRNDdbQiuyv2E9AsTjzepZCX21C1oyC0m436ZB5yFNZA9UffZCoqEWOnCQnODcWnr5W5ympocEsZBCqnqlZARdanZBl4Twnyp3dLZBnKCApVC0VS2IR7Bi9hMujnMIKmQMucOae4jikWutAKLJXGHFNAZBYlQZDZD"
 
-# Kết nối đến PostgreSQL qua biến môi trường DATABASE_URL
-DATABASE_URL = os.environ.get("DATABASE_URL")
-conn = psycopg2.connect(DATABASE_URL, sslmode='require')
-cursor = conn.cursor()
+# PostgreSQL Railway
+DATABASE_URL = os.environ.get("DATABASE_URL")  # Railway tự gán
 
-# Tạo bảng nếu chưa tồn tại
-cursor.execute("""
-    CREATE TABLE IF NOT EXISTS links (
-        name TEXT PRIMARY KEY,
-        url TEXT
-    )
-""")
-conn.commit()
+def get_connection():
+    return psycopg2.connect(DATABASE_URL, sslmode='require')
 
-# ----- Các hàm thao tác DB -----
+def init_db():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS links (
+            name TEXT PRIMARY KEY,
+            url TEXT
+        )
+    """)
+    conn.commit()
+    cur.close()
+    conn.close()
+
 def save_link_to_db(name, url):
-    cursor.execute("""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
         INSERT INTO links (name, url)
         VALUES (%s, %s)
         ON CONFLICT (name) DO UPDATE SET url = EXCLUDED.url
     """, (name, url))
     conn.commit()
+    cur.close()
+    conn.close()
 
 def get_link(name):
-    cursor.execute("SELECT url FROM links WHERE name=%s", (name,))
-    result = cursor.fetchone()
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT url FROM links WHERE name=%s", (name,))
+    result = cur.fetchone()
+    cur.close()
+    conn.close()
     return result[0] if result else None
 
 def delete_link(name):
-    cursor.execute("DELETE FROM links WHERE name=%s", (name,))
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM links WHERE name=%s", (name,))
     conn.commit()
+    cur.close()
+    conn.close()
 
-# ----- Webhook Facebook -----
 @app.route("/webhook", methods=["GET"])
 def verify():
     if request.args.get("hub.mode") == "subscribe" and request.args.get("hub.verify_token") == VERIFY_TOKEN:
@@ -90,11 +105,7 @@ def send_message(psid, message):
     }
     requests.post(url, json=payload)
 
-
-# ----- Khởi động server -----
 if __name__ == "__main__":
+    init_db()
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
-
-#EAAffNumwM40BO9fetZCNa7FjvE7OnhY6Yxex2EYJRXiqRNDdbQiuyv2E9AsTjzepZCX21C1oyC0m436ZB5yFNZA9UffZCoqEWOnCQnODcWnr5W5ympocEsZBCqnqlZARdanZBl4Twnyp3dLZBnKCApVC0VS2IR7Bi9hMujnMIKmQMucOae4jikWutAKLJXGHFNAZBYlQZDZD
