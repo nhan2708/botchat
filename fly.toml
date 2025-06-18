@@ -1,1 +1,1 @@
-flyctl launch
+flyctl launch --remote-only
